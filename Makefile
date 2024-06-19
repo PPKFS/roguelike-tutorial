@@ -2,7 +2,6 @@ all: build
 
 build:
 	mdbook build
-	if [ -f .git2rss -a -x git2rss ] ; then ./git2rss > book/commits.xml ; fi
 
 serve:
 	mdbook serve --open --hostname 127.0.0.1
@@ -15,7 +14,7 @@ serve:
 #   push: rsync
 #   push: gh-pages
 
-push:
+push: gh-pages
 
 ########################################
 # IF you're going to publish the generated book to a web server, and you're

@@ -3,7 +3,7 @@
 # * template https://github.com/kg4zow/mdbook-template/
 
 [book]
-authors             = ["Avery]
+authors             = ["Avery"]
 language            = "en"
 multilingual        = false
 src                 = "src"
