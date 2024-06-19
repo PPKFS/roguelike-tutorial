@@ -10,11 +10,8 @@ src                 = "src"
 title               = "Haskell Roguelike Tutorial with Roguefunctor and Bearlibterminal"
 
 [output.html]
-additional-css      = [ "section-lines.css" , "version-commit.css" ]
+additional-css      = [ "section-lines.css" ]
 curly-quotes        = false
 git-repository-url  = "https://github.com/ppkfs/roguelike-tutorial"
 no-section-label    = true
 
-[preprocessor.version-commit]
-renderers           = [ "html" ]
-command             = "./version-commit"
