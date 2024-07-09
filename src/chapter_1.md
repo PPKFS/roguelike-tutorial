@@ -54,12 +54,11 @@ screenSize = V2 100 50
 We start by defining the size of our screen, in tiles. `V2` is the generic (integer-valued) 2D vector/point/position type. Everything is done in tiles; changing the size of the font will change the size of the screen!
 
 
-## Working with `V2`
+### Side note: Working with `V2`
 
 We can access the two components in a couple of handy vanilla Haskell ways:
 
 ```haskell
-
 -- pattern matching
 f :: V2 -> a
 f (V2 x y) = ...
@@ -112,12 +111,54 @@ add5ToBothParts :: V2 -> V2
 add5ToBothParts v = v & _1 %~ (+5) & _2 %~ (+5)
 
 -- and finally, over is the non-operator version of `%~`.
--- Chaining multiple lens updates doesn't quite work so well.
+-- Chaining multiple lens updates doesn't quite work so well with the non-operator versions...
 
 add5ToBothParts v = (over #x (+5) v) & (over _2 (+5))
 ```
 
+## Window handling
+```haskell
+withWindow
+  defaultWindowOptions { size = Just screenSize }
+  pass
+  (const runLoop)
+  pass
+```
 
+`withWindow` is a thin wrapper around [`bracket`](https://hackage.haskell.org/package/base-4.20.0.1/docs/Control-Exception.html#v:bracket). `bracket` (from `Control.Exception` amongst others like `unlift-io`) is a safe way to wrap an `IO` call with initialisation and cleanup logic that guarantees the cleanup logic will be called. Using `withWindow` means that no matter how we leave the window (either force quitting or closing normally) we will call the `terminal_close` function to free resources.
+
+```haskell
+withWindow ::
+  MonadIO m
+  => WindowOptions -- the options for creating a new window (size, font, etc)
+  -> m a -- initialisation logic
+  -> (a -> m b) -- the computation in-between
+  -> m c -- cleanup logic
+  -> m b
+```
+
+`pass` is an alias for `return ()`; the monadic do nothing. We don't have any special initialisation or cleanup logic to do (window opening and closing is done for us), so we just use `pass`. Note that this will only **call the computation in-between once**, so any looping needs to be done there. We do have to use `const runLoop` because `a ~ ()` and so the in-between computation is actually `() -> m b`.
+
+Note: We could just as easily have done this without `withWindow` by calling `terminalOpen` and `terminalClose`, and using bearlibterminal's config strings to pass to [`terminalSet`](http://foo.wyrd.name/en:bearlibterminal:reference#set), either with or without `bracket` -- but we'll go for simplicity and use the higher level functions.
+
+```haskell
+runLoop :: MonadIO m => m ()
+runLoop = do
+  -- drawing code will go here
+  terminalRefresh
+  -- handle events
+  shouldContinue <- handleEvents Blocking $ \case
+    WindowEvent Resize -> return True
+    WindowEvent WindowClose -> return False
+    Keypress TkEsc -> return False
+    _ -> return False
+  -- update logic will go here
+  when (and shouldContinue) runLoop
+```
+
+The main game loop: draw things to the screen (and then actually render it), handle incoming input, and finally do any game update logic. Right now we don't have any drawing to do, or game update logic. We do need to refresh the terminal at least once - a quirk of `bearlibterminal` is that it won't display a window until a call to `terminal_refresh/terminalRefresh`.
+
+For the event handling, we want to handle all of the events that have arrived since the last time we checked. `handleEvents` takes an event handling function `Event ->
 ## Drawing an `@`
 
 Without further ado, we can draw things.
