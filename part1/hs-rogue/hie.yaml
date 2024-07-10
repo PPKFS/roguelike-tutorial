@@ -1,4 +1,4 @@
 cradle:
   cabal:
-    - path: "app"
-      component: "executable:hs-rogue"
+    - path: "app-simple"
+      component: "executable:hs-rogue-simple"

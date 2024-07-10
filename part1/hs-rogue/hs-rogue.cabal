@@ -16,8 +16,23 @@ tested-with:   GHC == 9.4.7
 common warnin
 
 
-executable hs-rogue
+executable hs-rogue-simple
+    main-is:          Main.hs
 
+    default-extensions:
+        LambdaCase
+        OverloadedStrings
+    build-depends:
+        base ^>=4.19.1.0
+        , bearlibterminal
+        , roguefunctor
+        , containers
+        , transformers
+    hs-source-dirs:   app-simple
+    default-language: GHC2021
+    ghc-options: -Wall
+
+executable hs-rogue-full
     main-is:          Main.hs
 
     default-extensions:
@@ -32,6 +47,7 @@ executable hs-rogue
         , roguefunctor
         , containers
         , optics
-    hs-source-dirs:   app
+        , mtl
+    hs-source-dirs: app-full
     default-language: GHC2021
     ghc-options: -Wall
