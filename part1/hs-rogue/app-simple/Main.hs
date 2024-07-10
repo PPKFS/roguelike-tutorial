@@ -14,7 +14,7 @@ import BearLibTerminal
       terminalPrintText,
       terminalRefresh )
 import Control.Monad.Trans.State
-import Control.Monad
+import Control.Monad (when)
 
 -- define our screen size in tiles.
 screenSize :: V2
@@ -82,11 +82,14 @@ calculateNewLocation dir v =
         DownDir -> modifyY (+1)
   in
     updateIt v
-  where
-    -- as this is the simple version, I don't want to bring in optics so we'll have some helper
-    -- functions for modifying components of a V2
-    modifyX f (V2 x y) = V2 (f x) y
-    modifyY f (V2 x y) = V2 x (f y)
+
+-- as this is the simple version, I don't want to bring in optics so we'll have some helper
+-- functions for modifying components of a V2
+
+modifyX :: (Int -> Int) -> V2 -> V2
+modifyX f (V2 x y) = V2 (f x) y
+modifyY :: (Int -> Int) -> V2 -> V2
+modifyY f (V2 x y) = V2 x (f y)
 
 -- this is our game loop. we want to draw the screen, then handle any events (keyboard/mouse input and window
 -- resizing or closing), and then finally do any game logic updates.
@@ -103,14 +106,13 @@ runLoop = do
   -- but we have a V2, so we can use withV2 to curry it for us.
   -- we could also have done
   -- (V2 playerX playerY) <- gets playerPosition
-  -- void $ terminalPrintText playerX playerY "@"
+  -- _ <- terminalPrintText playerX playerY "@"
   -- printText returns the dimensions of the rectangle of the text we just drew.
-  -- whilst we could just ignore this, it does throw a warning that we are discarding
-  -- a result of type Dimensions..so adding void to explicitly ignore this return
-  -- value makes the compiler happier.
+  -- whilst we could just ignore this and do `withV2 ...`, it does throw a warning that we are discarding
+  -- a result of type Dimensions. Using `void` is another option!
 
   -- NOTE: this works with Text rather than String, which is why we have OverloadedStrings enabled.
-  void $ withV2 playerPos terminalPrintText "@"
+  _ <- withV2 playerPos terminalPrintText "@"
   -- now we've drawn everything, we call refresh to actually push our changes to be drawn.
   terminalRefresh
 
@@ -123,7 +125,7 @@ runLoop = do
   -- or NonBlocking, which will simply do nothing if there are no events. If there are no events and we are in
   -- Blocking mode, then this will wait until an event comes in. This gives us a turn based system for free! (which
   -- will be handy when we add things like monster AI because otherwise the monsters will get a turn every frame)
-  void $ handleEvents Blocking $ \case
+  _ <- handleEvents Blocking $ \case
     -- if we get a WindowClose event, then we want to stop running our game loop.
     -- but rather than doing a break or jump, it's nicer to just record that we are expecting to quit at the end of
     -- this loop.
